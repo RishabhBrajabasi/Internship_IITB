@@ -2,7 +2,6 @@ from __future__ import division
 
 import math
 import re
-from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,7 +42,7 @@ def filter_bank(o_data, low_pass, high_pass, fs, order_of_filter, window_dur, ho
         st_energy[i] = st_energy[i] / max_st_energy  # Normalizing the curve
     return st_energy, atad
 #----------------------------------------------------------------------------------------------------------------------#
-file_no = '1372'
+file_no = '17'
 audio_file ='F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V6\Analyze\Vowel_Evaluation_V6_Test_7\\' + file_no + '.wav'
 textgridFA = 'F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V6\Analyze\Vowel_Evaluation_V6_Test_7\\' + file_no + 'FA.TextGrid'
 textgridPE = 'F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V6\Analyze\Vowel_Evaluation_V6_Test_7\\' + file_no + 'PE.TextGrid'
@@ -52,88 +51,94 @@ window_dur=50
 hop_dur = 7
 threshold_smooth = 120
 #----------------------------------------------------------------------------------------------------------------------#
-fs, data_f = wavfile.read(audio_file)  # Reading data from wav file in an array
-data_f = data_f / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
-
-
-
-fs, datao = wavfile.read(audio_file)  # Reading data from wav file in an array
-datao = datao / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
-length_o = len(datao)
+fs, data0 = wavfile.read(audio_file)  # Reading data from wav file in an array
+data0 = data0 / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
 window_size = int(window_dur * fs * 0.001)  # Converting window length to samples
 hop_size = int(hop_dur * fs * 0.001)  # Converting hop length to samples
 window_type = np.hanning(window_size)  # Window type: Hanning (by default)
-no_frames = int(math.ceil(len(datao) / (float(hop_size))))  # Determining the number of frames
+no_frames = int(math.ceil(len(data0) / (float(hop_size))))  # Determining the number of frames
 zero_array = np.zeros(window_size)  # Appending appropriate number of zeros
-datao = np.concatenate((datao, zero_array))
-length = len(datao)  # Finding length of the actual data
+data0 = np.concatenate((data0, zero_array))
+length = len(data0)  # Finding length of the actual data
 
-st_energyo = []
+st_energy_0 = []
 for i in range(no_frames):  # Calculating frame wise short term energy
-    frame = datao[i * hop_size:i * hop_size + window_size] * window_type  # Multiplying each frame with a hamming window
-    st_energyo.append(sum(frame ** 2))  # Calculating the short term energy
-max_st_energy = max(st_energyo)  # Maximum value of Short term energy curve
+    frame = data0[i * hop_size:i * hop_size + window_size] * window_type  # Multiplying each frame with a hamming window
+    st_energy_0.append(sum(frame ** 2))  # Calculating the short term energy
+max_st_energy = max(st_energy_0)  # Maximum value of Short term energy curve
 for i in range(no_frames):
-    st_energyo[i] = st_energyo[i]/max_st_energy  # Normalizing the curve
-
-
-
-
+    st_energy_0[i] = st_energy_0[i] / max_st_energy  # Normalizing the curve
+#----------------------------------------------------------------------------------------------------------------------#
 fs, data1 = wavfile.read(audio_file)  # Reading data from wav file in an array
 data1 = data1 / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
-data = butter_bandpass_filter(data1, 300, 2500, fs, order=6)
-length_o = len(data)
+data1 = butter_bandpass_filter(data1, 300, 2500, fs, order=6)
 window_size = int(window_dur * fs * 0.001)  # Converting window length to samples
 hop_size = int(hop_dur * fs * 0.001)  # Converting hop length to samples
 window_type = np.hanning(window_size)  # Window type: Hanning (by default)
-no_frames = int(math.ceil(len(data) / (float(hop_size))))  # Determining the number of frames
+no_frames = int(math.ceil(len(data1) / (float(hop_size))))  # Determining the number of frames
 zero_array = np.zeros(window_size)  # Appending appropriate number of zeros
-data = np.concatenate((data, zero_array))
-length = len(data)  # Finding length of the actual data
-x_values = np.arange(0, len(data), 1) / float(fs)
+data1 = np.concatenate((data1, zero_array))
+
+st_energy_1 = []
+for i in range(no_frames):  # Calculating frame wise short term energy
+    frame = data1[i * hop_size:i * hop_size + window_size] * window_type  # Multiplying each frame with a hamming window
+    st_energy_1.append(sum(frame ** 2))  # Calculating the short term energy
+max_st_energy = max(st_energy_1)  # Maximum value of Short term energy curve
+for i in range(no_frames):
+    st_energy_1[i] = st_energy_1[i] / max_st_energy  # Normalizing the curve
 #----------------------------------------------------------------------------------------------------------------------#
+fs, data2 = wavfile.read(audio_file)  # Reading data from wav file in an array
+data2 = data2 / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
+data2 = butter_bandpass_filter(data2, 300, 2500, fs, order=6)
+window_size = int(window_dur * fs * 0.001)  # Converting window length to samples
+hop_size = int(hop_dur * fs * 0.001)  # Converting hop length to samples
+window_type = np.hanning(window_size)  # Window type: Hanning (by default)
+no_frames = int(math.ceil(len(data2) / (float(hop_size))))  # Determining the number of frames
+zero_array = np.zeros(window_size)  # Appending appropriate number of zeros
+data2 = np.concatenate((data2, zero_array))
+x_values = np.arange(0, len(data2), 1) / float(fs)
+
+st_energy_2 = []
+for i in range(no_frames):  # Calculating frame wise short term energy
+    frame = data2[i * hop_size:i * hop_size + window_size] * window_type  # Multiplying each frame with a hamming window
+    st_energy_2.append(sum(frame ** 2))  # Calculating the short term energy
+max_st_energy = max(st_energy_2)  # Maximum value of Short term energy curve
+for i in range(no_frames):
+    st_energy_2[i] = st_energy_2[i] / max_st_energy  # Normalizing the curve
+
+
 noise_energy = 0  # Initializing noise energy
 energy = [0] * length  # Initializing list energy
 for bit in range(length):
-    energy[bit] = data[bit] * data[bit]  # Squaring each point of the data to calculate noise energy
+    energy[bit] = data2[bit] * data2[bit]  # Squaring each point of the data to calculate noise energy
 for ne in range(0, 800):
     noise_energy += energy[ne]  # Taking the first 800 samples of the original sound file
 noise_energy /= 800  # Averaging the square of the first 800 noise samples
 #----------------------------------------------------------------------------------------------------------------------#
-st_energy = []
-for i in range(no_frames):  # Calculating frame wise short term energy
-    frame = data[i * hop_size:i * hop_size + window_size] * window_type  # Multiplying each frame with a hamming window
-    st_energy.append(sum(frame ** 2))  # Calculating the short term energy
-max_st_energy = max(st_energy)  # Maximum value of Short term energy curve
-for i in range(no_frames):
-    st_energy[i] = st_energy[i]/max_st_energy  # Normalizing the curve
-
-original_st_energy = st_energy
-#----------------------------------------------------------------------------------------------------------------------#
-if len(st_energy) < threshold_smooth:
-    st_energy = st_energy
+if len(st_energy_2) < threshold_smooth:
+    st_energy_2 = st_energy_2
 else:
-    st_energy = moving_average(st_energy, 20)
+    st_energy_2 = moving_average(st_energy_2, 20)
 
 #----------------------------------------------------------------------------------------------------------------------#
 peak = []  # Initializing list
 count_of_peaks = 0  # Initializing no of peaks
-for p in range(len(st_energy)):
+for p in range(len(st_energy_2)):
     if p == 0:  # First element
-        if st_energy[p] > st_energy[p + 1]:  # If the first element is greater than the succeeding element it is a peak.
-            peak.append(st_energy[p])  # Append the energy level of the peak
+        if st_energy_2[p] > st_energy_2[p + 1]:  # If the first element is greater than the succeeding element it is a peak.
+            peak.append(st_energy_2[p])  # Append the energy level of the peak
             count_of_peaks += 1  # Increment count
         else:
             peak.append(0)  # Else append a zero
-    elif p == len(st_energy) - 1:  # Last element
-        if st_energy[p] > st_energy[p - 1]:  # If the last element is greater than the preceding element it is a peak.
-            peak.append(st_energy[p])  # Append the energy level of the peak
+    elif p == len(st_energy_2) - 1:  # Last element
+        if st_energy_2[p] > st_energy_2[p - 1]:  # If the last element is greater than the preceding element it is a peak.
+            peak.append(st_energy_2[p])  # Append the energy level of the peak
             count_of_peaks += 1  # Increment count
         else:
             peak.append(0)  # Else append a zero
     else:  # All the other elements
-        if st_energy[p] > st_energy[p + 1] and st_energy[p] > st_energy[p - 1]:  # If the element is greater than the element preceding and succeeding it, it is a peak.
-            peak.append(st_energy[p])  # Append the energy level of the peak
+        if st_energy_2[p] > st_energy_2[p + 1] and st_energy_2[p] > st_energy_2[p - 1]:  # If the element is greater than the element preceding and succeeding it, it is a peak.
+            peak.append(st_energy_2[p])  # Append the energy level of the peak
             count_of_peaks += 1  # Increment count
         else:
             peak.append(0)  # Else append a zero
@@ -154,25 +159,24 @@ for p in range(len(peak)):
 valley = []
 count_of_valleys = 0
 location_valley = []
-for p in range(len(st_energy)):
+for p in range(len(st_energy_2)):
     if p == 0:  # For the first element
-        if st_energy[p] < st_energy[p + 1]:  # If the first element is lesser than the succeeding element
-            valley.append(st_energy[p])  # Append the energy level of the valley
+        if st_energy_2[p] < st_energy_2[p + 1]:  # If the first element is lesser than the succeeding element
+            valley.append(st_energy_2[p])  # Append the energy level of the valley
             count_of_valleys += 1  # Increment the count
             location_valley.append(p)  # Make note of the position of the valley
         else:
             valley.append(0)  # Else append zero
-    elif p == len(st_energy) - 1:  # For the last element
-        if st_energy[p] < st_energy[p - 1]:  # If the last element is lesser than the preceding element
-            valley.append(st_energy[p])  # Append the energy level of the valley
+    elif p == len(st_energy_2) - 1:  # For the last element
+        if st_energy_2[p] < st_energy_2[p - 1]:  # If the last element is lesser than the preceding element
+            valley.append(st_energy_2[p])  # Append the energy level of the valley
             count_of_valleys += 1  # Increment the count
             location_valley.append(p)  # Make note of the position of the valley
         else:
             valley.append(0)  # Else append zero
     else:
-        if st_energy[p] < st_energy[p + 1] and st_energy[p] < st_energy[
-                    p - 1]:  # If the element is lesser than the element preceding and succeeding it
-            valley.append(st_energy[p])  # Append the energy level of the valley
+        if st_energy_2[p] < st_energy_2[p + 1] and st_energy_2[p] < st_energy_2[p - 1]:  # If the element is lesser than the element preceding and succeeding it
+            valley.append(st_energy_2[p])  # Append the energy level of the valley
             count_of_valleys += 1  # Increment the count
             location_valley.append(p)  # Make note of the position of the valley
         else:
@@ -210,27 +214,22 @@ for k in range(len(location_peak)):
 #----------------------------------------------------------------------------------------------------------------------#
 value_valley =[]
 for i in range(len(ripple_valley)):
-    value_valley.append(st_energy[ripple_valley[i]])
+    value_valley.append(st_energy_2[ripple_valley[i]])
 
 ripple_value = []
 for k in range(1, len(ripple), 3):
-    ripple_value.append((st_energy[ripple[k]] - st_energy[ripple[k + 1]]) / (st_energy[ripple[k]] - st_energy[ripple[k - 1]]))
+    ripple_value.append((st_energy_2[ripple[k]] - st_energy_2[ripple[k + 1]]) / (st_energy_2[ripple[k]] - st_energy_2[ripple[k - 1]]))
 #----------------------------------------------------------------------------------------------------------------------#
-ripple_value = []
-for k in range(1, len(ripple), 3):
-    ripple_value.append(
-        (st_energy[ripple[k]] - st_energy[ripple[k + 1]]) / (st_energy[ripple[k]] - st_energy[ripple[k - 1]]))
-
 loc = []
 for k in range(len(ripple_value)):
     loc.append(location_peak[ripple_value.index(ripple_value[k])])
-#----------------------------------------------------------------------------------------------------------------------#
+
 for k in range(len(ripple_value)):
     if k != len(ripple_value) - 1:
         if location_peak[ripple_value.index(ripple_value[k + 1])] - location_peak[ripple_value.index(ripple_value[k])] < 20:
             if ripple_value[k] > 3.0 and ripple_value[k + 1] < 1.4 or ripple_value[k] > 1.02 and ripple_value[k + 1] < 0.3:
-                v1 = st_energy[location_peak[ripple_value.index(ripple_value[k])]]
-                v2 = st_energy[location_peak[ripple_value.index(ripple_value[k + 1])]]
+                v1 = st_energy_2[location_peak[ripple_value.index(ripple_value[k])]]
+                v2 = st_energy_2[location_peak[ripple_value.index(ripple_value[k + 1])]]
                 if v1 >= v2:
                     loc.remove(location_peak[ripple_value.index(ripple_value[k + 1])])
                 else:
@@ -242,7 +241,8 @@ for k in range(len(ripple_value)):
 peak_threshold[:] = []
 for j in range(no_frames):
     if j in loc:
-        peak_threshold.append(st_energy[loc.index(j)])
+        peak_threshold.append(st_energy_2[loc[loc.index(j)]])
+        print 'Peak location:',loc[loc.index(j)],' Peak value:',st_energy_2[loc[loc.index(j)]]
     else:
         peak_threshold.append(0)
 #----------------------------------------------------------------------------------------------------------------------#
@@ -289,70 +289,65 @@ for m in re.finditer('"Vowel"', data_2):
     time_2.append(float(
         data_2[m.start() - 17] + data_2[m.start() - 16] + data_2[m.start() - 15] + data_2[m.start() - 14] +
         data_2[m.start() - 13] + data_2[m.start() - 12]))
+#----------------------------------------------------------------------------------------------------------------------#
+fs, data_f = wavfile.read(audio_file)  # Reading data from wav file in an array
+data_f = data_f / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
 
-
-
-
-st_energy_1, f_data_1 = filter_bank(data_f, 200,400,fs,6,window_dur,hop_dur)
-st_energy_2, f_data_2 = filter_bank(data_f, 400,630,fs,6,window_dur,hop_dur)
-st_energy_3, f_data_3 = filter_bank(data_f, 630,920,fs,6,window_dur,hop_dur)
-st_energy_4, f_data_4 = filter_bank(data_f, 920,1270,fs,6,window_dur,hop_dur)
-st_energy_5, f_data_5 = filter_bank(data_f, 1270,1720,fs,6,window_dur,hop_dur)
-st_energy_6, f_data_6 = filter_bank(data_f, 1720,2320,fs,6,window_dur,hop_dur)
-st_energy_7, f_data_7 = filter_bank(data_f, 2320,3200,fs,6,window_dur,hop_dur)
-st_energy_8, f_data_8 = filter_bank(data_f, 3200,7000,fs,6,window_size,hop_dur)
-
+st_energy_1f, f_data_1 = filter_bank(data_f, 200, 400, fs, 6, window_dur, hop_dur)
+st_energy_2f, f_data_2 = filter_bank(data_f, 400, 630, fs, 6, window_dur, hop_dur)
+st_energy_3f, f_data_3 = filter_bank(data_f, 630, 920, fs, 6, window_dur, hop_dur)
+st_energy_4f, f_data_4 = filter_bank(data_f, 920, 1270, fs, 6, window_dur, hop_dur)
+st_energy_5f, f_data_5 = filter_bank(data_f, 1270, 1720, fs, 6, window_dur, hop_dur)
+st_energy_6f, f_data_6 = filter_bank(data_f, 1720, 2320, fs, 6, window_dur, hop_dur)
+st_energy_7f, f_data_7 = filter_bank(data_f, 2320, 3200, fs, 6, window_dur, hop_dur)
 #---------------------------------------------------------------------------------------------------------------------#
 plt.subplot(311)
-plt.plot(x_values, data)  # The Original Data
+plt.plot(x_values, data2)  # The Original Data
 plt.xlim(0,x_values[-1])  # Limiting it to fixed range for representational purposes
 for j in range(0, len(time_1), 4):
-    plt.vlines(time_1[j], min(data)+0.30*min(data), max(data), 'black')  # Syllable Boundaries
+    plt.vlines(time_1[j], min(data2)+0.30*min(data2), max(data2), 'black')  # Syllable Boundaries
 for j in range(2, len(time_1), 4):
-    plt.text(time_1[j - 2], min(data)+0.28*min(data), time_1[j], fontsize=15, color='green', rotation=0)  # Syllable Labels
+    plt.text(time_1[j - 2], min(data2)+0.28*min(data2), time_1[j], fontsize=15, color='green', rotation=0)  # Syllable Labels
 for j in range(len(time_2)):
-    plt.vlines(time_2[j], min(data), max(data), 'red')  # Vowel Boundaries
+    plt.vlines(time_2[j], min(data2), max(data2), 'red')  # Vowel Boundaries
 for j in range(0, len(time_2), 2):
-    plt.text(time_2[j], max(data), 'Vowel', fontsize=12, color='red')  # Vowel Label
+    plt.text(time_2[j], max(data2), 'Vowel', fontsize=12, color='red')  # Vowel Label
 for j in range(0,len(time_2),2):  # Bounding arrows for Vowel
-    plt.arrow(time_2[j], max(data), (time_2[j + 1] - time_2[j])-0.01, 0, head_width=0.005, head_length=0.01,color='red')
-    plt.arrow(time_2[j+1], max(data), -(time_2[j + 1] - time_2[j]) + 0.01, 0, head_width=0.005, head_length=0.01,color='red')
+    plt.arrow(time_2[j], max(data2), (time_2[j + 1] - time_2[j])-0.01, 0, head_width=0.005, head_length=0.01,color='red')
+    plt.arrow(time_2[j+1], max(data2), -(time_2[j + 1] - time_2[j]) + 0.01, 0, head_width=0.005, head_length=0.01,color='red')
 for j in range(0,len(time_1),4):  # Bounding arrows for Syllable
-    plt.arrow(time_1[j], min(data)+0.30*min(data), (time_1[j + 1] - time_1[j])-0.01, 0, head_width=0.005, head_length=0.01)
-    plt.arrow(time_1[j+1], min(data)+0.30*min(data), -(time_1[j + 1] - time_1[j]) + 0.01, 0, head_width=0.005, head_length=0.01)
+    plt.arrow(time_1[j], min(data2)+0.30*min(data2), (time_1[j + 1] - time_1[j])-0.01, 0, head_width=0.005, head_length=0.01)
+    plt.arrow(time_1[j+1], min(data2)+0.30*min(data2), -(time_1[j + 1] - time_1[j]) + 0.01, 0, head_width=0.005, head_length=0.01)
 plt.xlabel('Time (In seconds)')
 plt.ylabel('Amplitude')
-plt.title('Sound Waveform',color='blue')
+plt.title('Sound Waveform', color='blue')
 
 plt.subplot(312)
-plt.plot(st_energy)  # Smoothed Short term energy
-plt.plot(original_st_energy)
-plt.plot(st_energyo)
+plt.plot(st_energy_0, 'red')
+plt.plot(st_energy_1, 'black')
+plt.plot(st_energy_2, 'blue')
 for i in range(len(location_peak)):
-    plt.scatter(location_peak[i], st_energy[location_peak[i]], color='red', label='Peak')
+    plt.scatter(location_peak[i], st_energy_2[location_peak[i]], color='red', label='Peak')
 plt.scatter(ripple_valley, value_valley, color='green', label='Valley')
 for j in range(len(location_peak)):
-    plt.text(location_peak[j], st_energy[location_peak[j]], str(round(ripple_value[j], 2)))
+    plt.text(location_peak[j], st_energy_2[location_peak[j]], str(round(ripple_value[j], 2)))
 for j in range(len(loc)):
-    plt.vlines(loc[j], min(st_energy), max(st_energy), 'black')  # Vowel Centres
-plt.xlim(0,len(st_energy))  # Limiting it to fixed range for representational purposes
+    plt.vlines(loc[j], min(st_energy_2), max(st_energy_2), 'black')  # Vowel Centres
+plt.xlim(0, len(st_energy_2))  # Limiting it to fixed range for representational purposes
 
 plt.subplot(313)
-plt.plot(st_energy_1,'red',label='[200-400]')
-plt.plot(st_energy_2,'orange',label='[400-630]')
-plt.plot(st_energy_3,'yellow',label='[630-920]')
-plt.plot(st_energy_8,'black',label='[3200-7500]')
-plt.plot(st_energy_4,'green',label='[920-1270]')
-plt.plot(st_energy_5,'blue',label='[1270-1720]')
-plt.plot(st_energy_6,'indigo',label='[1720-2320]',ls='dotted')
-plt.plot(st_energy_7,'violet',label='[2320-3200]',ls='dashed')
-
-plt.xlim(0,len(st_energy_1))
+plt.plot(st_energy_1f, 'red', label='[200-400]')
+plt.plot(st_energy_2f, 'orange', label='[400-630]')
+plt.plot(st_energy_3f, 'yellow', label='[630-920]')
+plt.plot(st_energy_4f, 'green', label='[920-1270]')
+plt.plot(st_energy_5f, 'blue', label='[1270-1720]')
+plt.plot(st_energy_6f, 'indigo', label='[1720-2320]', ls='dotted')
+plt.plot(st_energy_7f, 'violet', label='[2320-3200]', ls='dashed')
+plt.xlim(0, len(st_energy_1f))
 # plt.legend()
 plt.xlabel('No. of frames')
 plt.ylabel('Normalised Magnitude')
 plt.title('Short Term Energy')
-plt.show()
 plt.show()
 
 
