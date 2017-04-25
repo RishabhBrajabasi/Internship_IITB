@@ -1,10 +1,11 @@
 """
 TIMIT database.py
 Purpose of this script is to extract the files .wav files and .phn files from the various folders and sub-folders in the
-TIMIT database and place then in a separate folder.
+TIMIT database and place then in a separate folder. It also creates TextGrid files for each .phn files and thus completes
+the data set.
 
 Author: Rishabh Brajabasi
-Date: 24th April 2017
+Date: 25th April 2017
 """
 
 
