@@ -9,14 +9,15 @@ import glob
 import math
 import os
 import re
+import sys
 import win32api
 import winsound
 from datetime import datetime
 from shutil import copyfile
-from scipy.signal import butter, lfilter
 
 import numpy as np
 from scipy.io import wavfile
+from scipy.signal import butter, lfilter
 
 startTime = datetime.now()  # To calculate the run time of the code.
 
@@ -46,7 +47,7 @@ def peaks(st_energy_peak):
         elif p == len(st_energy_peak) - 1:  # Last element
             peak_f.append(0)  # Append the energy level of the peak
         else:  # All the other elements
-            if st_energy_peak[p] > st_energy_peak[p + 1] and st_energy_peak[p] > st_energy_peak[p - 1]:  # If the element is greater than the element preceding and succeeding it, it is a peak.
+            if st_energy_peak[p] > st_energy_peak[p + 1] and st_energy_peak[p] > st_energy_peak[p - 1]:
                 peak_f.append(st_energy_peak[p])  # Append the energy level of the peak
                 count_of_peaks_f += 1  # Increment count
             else:
@@ -81,7 +82,7 @@ def valleys(st_energy_valley):
             else:
                 valley_f.append(0)  # Else append zero
         else:
-            if st_energy_valley[v] < st_energy_valley[v + 1] and st_energy_valley[v] < st_energy_valley[v - 1]:  # If the element is lesser than the element preceding and succeeding it
+            if st_energy_valley[v] < st_energy_valley[v + 1] and st_energy_valley[v] < st_energy_valley[v - 1]:
                 valley_f.append(st_energy_valley[v])  # Append the energy level of the valley
                 location_valley_f.append(v)  # Make note of the position of the valley
             else:
@@ -114,20 +115,27 @@ def ripple_elimination(ripple_value_elimination, location_peak_elimination, st_e
     for k in range(len(ripple_value_elimination)):
         loc.append(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])])
 
+    the_list = []
+
     for k in range(len(ripple_value_elimination)):
         if k != len(ripple_value_elimination) - 1:
-            if location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k + 1])] - location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])] < 20:
+            if location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k + 1])] \
+                    - location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])] < 20:
                 if ripple_value_elimination[k] > 3.0 and ripple_value_elimination[k + 1] < 1.4 or ripple_value_elimination[k] > 1.02 and ripple_value_elimination[
                             k + 1] < 0.3:
                     v1 = st_energy_elimination[location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])]]
                     v2 = st_energy_elimination[location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k + 1])]]
                     if v1 >= v2:
-                        loc.remove(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k + 1])])
+                        the_list.append(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k + 1])])
                     else:
-                        loc.remove(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])])
+                        the_list.append(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])])
         else:
             if ripple_value_elimination[k] > 3.0:
-                loc.remove(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])])
+                the_list.append(location_peak_elimination[ripple_value_elimination.index(ripple_value_elimination[k])])
+
+    for v in range(len(the_list)):
+        if the_list[v] in loc:
+            loc.remove(the_list[v])
 
     boundary_f = []
     for j in range(len(st_energy_elimination)):
@@ -201,26 +209,29 @@ def peak_elimination(audio, window_dur=50, hop_dur=7, degree=5, threshold_smooth
                 mark.append(p * hop_size + window_size)
                 vowel += 1
 
-        if mark[0] != 0.0:
-            text_file_1.write('%06.3f' % (0 * 0.0000625) + "\t" + '%06.3f' % (mark[0] * 0.0000625) + "\t" + " " + "\n")
+        if len(mark) != 0:
+            if mark[0] != 0.0:
+                text_file_1.write('%06.3f' % (0 * 0.0000625) + "\t" + '%06.3f' % (mark[0] * 0.0000625) + "\t" + " " + "\n")
 
-        for i in range(0, len(mark)-1):  # Writing the result to a CSV File
-            if i%2 == 0:
-                text_file_1.write(
-                '%06.3f' % (mark[i] * 0.0000625) + "\t" + '%06.3f' % (mark[i + 1] * 0.0000625) + "\t" + "Vowel" + "\n")
-            else:
-                text_file_1.write(
-                '%06.3f' % (mark[i] * 0.0000625) + "\t" + '%06.3f' % (mark[i + 1] * 0.0000625) + "\t" + " " + "\n")
+            for i in range(0, len(mark)-1):  # Writing the result to a CSV File
+                if i%2 == 0:
+                    text_file_1.write('%06.3f' % (mark[i] * 0.0000625) + "\t" + '%06.3f' % (mark[i + 1] * 0.0000625) + "\t" + "Vowel" + "\n")
+                else:
+                    text_file_1.write('%06.3f' % (mark[i] * 0.0000625) + "\t" + '%06.3f' % (mark[i + 1] * 0.0000625) + "\t" + " " + "\n")
 
-
-        if mark[-1] != length_o/16000 - 0.02:
-            text_file_1.write('%06.3f' % (mark[-1] * 0.0000625) + "\t" + '%06.3f' % (length_o/16000 - 0.02) + "\t" + " " + "\n")
+            if mark[-1] != length_o/16000 - 0.02:
+                text_file_1.write('%06.3f' % (mark[-1] * 0.0000625) + "\t" + '%06.3f' % (length_o/16000 - 0.02) + "\t" + " " + "\n")
+        else:
+            text_file_1.write('%06.3f' % 0.0 + "\t" + '%06.3f' % (length_o / 16000 - 0.02) + "\t" + " " + "\n")
 
         text_file_1.close()
 
         return new, vowel
     except:
         return new, -1
+#----------------------------------------------------------------------------------------------------------------------#
+
+
 #----------------------------------------------------------------------------------------------------------------------#
 def fa_count(text_file):
     text_grid_1 = open(text_file, 'r')  # Open TextGrid in read mode
@@ -251,6 +262,9 @@ def fa_count(text_file):
         return c, duration
     except:
         return -1, -1
+#----------------------------------------------------------------------------------------------------------------------#
+
+
 #----------------------------------------------------------------------------------------------------------------------#
 def textgrid(csvi):
     try:
@@ -289,6 +303,9 @@ def textgrid(csvi):
         fidTG.close()
     except:
         print 'Text Grid Creation Error', csvi
+#----------------------------------------------------------------------------------------------------------------------#
+
+
 #----------------------------------------------------------------------------------------------------------------------#
 def evaluation(textgrid1, textgrid2):
     try:
@@ -367,6 +384,8 @@ def evaluation(textgrid1, textgrid2):
     except:
         return -1
 #----------------------------------------------------------------------------------------------------------------------#
+
+#----------------------------------------------------------------------------------------------------------------------#
 def results_write(sr_no, name, vpe, vpee, vfa, t):
     if vpe == 0 or vfa == 0:
         results_vowel.write(str(sr_no) + ',')
@@ -424,13 +443,18 @@ def results_write(sr_no, name, vpe, vpee, vfa, t):
             results_vowel.write('Fast' + ',')
         results_vowel.write('\n')
 #----------------------------------------------------------------------------------------------------------------------#
+
+
+#----------------------------------------------------------------------------------------------------------------------#
 file_name_template_1 = 'F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V7\\'
 result_name = 'Vowel_Evaluation_V7_Modularization.csv'
+
 copyfile('C:\Users\Mahe\PycharmProjects\Internship_IITB\\Vowel Evaluation PE V7.py',
          'F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V7\\' + result_name[:-4] + '.txt')
 
 if not os.path.exists(file_name_template_1 + "Analyze\\" + result_name[:-4]):
     os.makedirs(file_name_template_1 + "Analyze\\" + result_name[:-4])
+
 #----------------------------------------------------------------------------------------------------------------------#
 file_no = 1
 results_vowel = open(file_name_template_1 + result_name, 'w')  # The csv file where the results are saved
@@ -453,6 +477,8 @@ for j in only_audio:
     copyfile(str(j[:-4] + '.TextGrid'), file_name_template_1 + "Analyze\\" + result_name[:-4] + "\\" + str(file_no) + 'FA.TextGrid')
     copyfile(str(filename1[:-4] + 'PE_NEW.TExtGrid'), file_name_template_1 + "Analyze\\" + result_name[:-4] + "\\" + str(file_no) + 'PE.TextGrid')
     file_no += 1
+    sys.stdout.write("\r{0}".format((round(float(file_no / len(only_audio)) * 100, 2))))
+    sys.stdout.flush()
 
 print datetime.now() - startTime  # Print program run time
 winsound.Beep(300, 2000)
