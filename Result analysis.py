@@ -49,6 +49,10 @@ start_time = 1.5
 end_time = 2.0
 results(two, start_time, end_time)
 
+start_time = 2.0
+end_time = 2.5
+results(two, start_time, end_time)
+
 start_time = 2.5
 end_time = 3.0
 results(two, start_time, end_time)
@@ -122,5 +126,9 @@ end_time = 11.5
 results(two, start_time, end_time)
 
 start_time = 11.5
+end_time = 12.0
+results(two, start_time, end_time)
+
+start_time = 12.0
 end_time = 60.0
 results(two, start_time, end_time)
