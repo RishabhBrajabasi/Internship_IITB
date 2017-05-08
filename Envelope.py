@@ -5,7 +5,96 @@ from scipy.signal import butter, lfilter
 
 audio_file ='F:\Projects\Active Projects\Project Intern_IITB\Vowel Evaluation PE V4\Analyze\Vowel_Evaluation_V4_I2\\17.wav'
 
+def peaks(st_energy_peak, threshold_peak):
+    peak_f = []
+    location_peak_f = []
+    for p in range(len(st_energy_peak)):
+        if p == 0:
+            peak_f.append(0)
+        elif p == len(st_energy_peak) - 1:
+            peak_f.append(0)
+        else:
+            if st_energy_peak[p] > st_energy_peak[p + 1] and st_energy_peak[p] > st_energy_peak[p - 1] and st_energy_peak[p] >= threshold_peak:
+                peak_f.append(st_energy_peak[p])
+                location_peak_f.append(p)
+            else:
+                peak_f.append(0)
+    return peak_f, location_peak_f
+#----------------------------------------------------------------------------------------------------------------------#
+def valleys(st_energy_valley, threshold_valley):
+    valley_f = []
+    location_valley_f = []
+    for v in range(len(st_energy_valley)):
+        if v == 0:
+            if st_energy_valley[v] < st_energy_valley[v + 1] and st_energy_valley[v] < threshold_valley:
+                valley_f.append(st_energy_valley[v])
+                location_valley_f.append(v)
+            else:
+                valley_f.append(0)
+        elif v == len(st_energy_valley) - 1:
+            if st_energy_valley[v] < st_energy_valley[v - 1] and st_energy_valley[v] < threshold_valley:
+                valley_f.append(st_energy_valley[v])
+                location_valley_f.append(v)
+            else:
+                valley_f.append(0)
+        else:
+            if st_energy_valley[v] < st_energy_valley[v + 1] and st_energy_valley[v] < st_energy_valley[v - 1] and st_energy_valley[v] < threshold_valley:
+                valley_f.append(st_energy_valley[v])
+                location_valley_f.append(v)
+            else:
+                valley_f.append(0)
+    return valley_f, location_valley_f
+#----------------------------------------------------------------------------------------------------------------------#
+def peak_valley_elimination(peak_pve, valley_pve, location_peak_pve, location_valley_pve):
 
+    # remove_valley = []
+    # for ele in range(len(location_combined)):
+    #     if location_combined[ele] in location_peak_pve:
+    #         if location_combined[ele] - location_combined[ele-1] < 20:
+    #             remove_valley.append(location_combined[ele-1])
+    #         elif location_combined[ele] - location_combined[ele+1] < 20:
+    #             remove_valley.append(location_combined[ele - 1])
+    #         elif d1[location_combined[ele]] - d1[location_combined[ele-1]] < 0.1:
+    #             remove_valley.append(location_combined[ele - 1])
+    #         elif d1[location_combined[ele]] - d1[location_combined[ele + 1]] < 0.1:
+    #             remove_valley.append(location_combined[ele - 1])
+    #
+    # location_valley_pve_new = []
+    # for ele in range(len(location_valley_pve)):
+    #     if location_valley_pve[ele] not in remove_valley:
+    #         location_valley_pve_new.append(location_valley_pve)
+    # valley_list = []
+    # valley_list_loc = []
+    # true_valley = [d1[location_valley_pve[0]]]
+    # print location_peak_pve
+    # print location_valley_pve
+    # for lpp in range(len(location_peak_pve)-1):
+    #     for val in range(location_peak_pve[lpp], location_peak_pve[lpp+1]):
+    #         if val in location_valley_pve:
+    #             valley_list.append(d1[val])
+    #             valley_list_loc.append(val)
+    #     print location_peak_pve[lpp], valley_list_loc, location_peak_pve[lpp+1]
+    #     min_val = min(valley_list)
+    #     valley_list[:] = []
+    #     valley_list_loc[:] = []
+    #     true_valley.append(d1.index(min_val))
+    # true_valley.append(d1[location_valley_pve[-1]])
+    #
+    # print location_peak_pve
+    # print location_valley_pve
+    # print true_valley
+
+    location_combined = location_peak_pve + location_valley_pve
+    location_combined.sort()
+    peak_valley_pair = [[]]
+
+    print location_combined
+    for ele in range(len(location_combined)):
+        if location_combined[ele] in location_peak_pve:
+            peak_valley_pair.append([location_combined[ele - 1], location_combined[ele], location_combined[ele + 1]])
+
+    peak_valley_pair.pop(0)
+    return peak_valley_pair
 #----------------------------------------------------------------------------------------------------------------------#
 def butter_bandpass(highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -38,145 +127,58 @@ for i in range(len(data)):
     else:
         data1.append(data[i])
 
-data2 = []
-for j in range(len(data)):
-    if data[j] < 0:
-        data2.append(data[j]*-0)
-    else:
-        data2.append(data[j])
-
 max1 = max(data1)
-max2 = max(data2)
 for k in range(len(data1)):
     data1[k] = data1[k]/max1
-    data2[k] = data2[k]/max2
 
 d1 = moving_average(data1, 1000)
 d1 = butter_bandpass_filter(d1, 100, fs, 5)
 d1 = moving_average(d1, 20)
 
-d2 = moving_average(data2, 1000)
-d2 = butter_bandpass_filter(d2, 100, fs, 5)
-d2 = moving_average(d2, 20)
-
 max1 = max(d1)
 for k in range(len(d1)):
     d1[k] = d1[k]/max1
-max2 = max(d2)
-for k in range(len(d2)):
-    d2[k] = d2[k]/max2
-
-plt.plot(x_values, batman, 'blue', label='Audio')
-plt.plot(x_values, d1, 'red', label='Envelope', linewidth='2.0')
-plt.legend(loc='best')
-plt.show()
 d1 = d1.tolist()
-convex_hull = []
-segment_boundary = [0]
+peak, location_peak = peaks(d1, 0.2)
+valley, location_valley = valleys(d1, 0.8)
+peak_valley = peak_valley_elimination(peak, valley, location_peak, location_valley)
+print peak_valley
+# eliminate = []
+# for val in range(len(location_peak)):
+#     if d1[peak_valley[val][1]] - d1[peak_valley[val][0]] < 0.05 and d1[peak_valley[val][1]] - d1[peak_valley[val][2]] < 0.05:
+#         # print peak_valley[val]
+#         # print d1[peak_valley[val][0]], d1[peak_valley[val][1]], d1[peak_valley[val][2]]
+#         eliminate.append(peak_valley[val])
+#     if peak_valley[val][1] - peak_valley[val][0] < 20 or peak_valley[val][2] - peak_valley[val][1] < 20:
+#         eliminate.append(peak_valley[val])
+# peak_valley_new = [[]]
+# for val in range(len(location_peak)):
+#     if peak_valley[val] not in eliminate:
+#         peak_valley_new.append(peak_valley[val])
+# peak_valley_new.pop(0)
 
-def segmentation(frame_energy, original_curve):
-    threshold = 0.1
-    convex_hull[:] = []  # The list needs to be emptied for each iteration
-    break_point = frame_energy.index(max(
-        frame_energy))  # The point till which the convex hull is monotonically increasing and following which it is monotonically decreasing
-    last_1 = frame_energy[0]  # The value that the convex hull sticks to if the curve is not increasing. Updated later
-    last_2 = frame_energy[break_point]  # The value the convex hull sticks to if the curve is not decreasing. Updated Later
-    for k in range(len(frame_energy) - 1):
-        if k < break_point:  # Monotonically increase till breakpoint reached
-            if frame_energy[k] > frame_energy[k - 1] and frame_energy[k] > last_1:
-                convex_hull.append(frame_energy[k])  # Add element of the frame_energy to the convex hull as long as it is increasing
-                last_1 = frame_energy[k]  # Update last_1, so that if the curve starts decreasing, the last greatest value is stored in last_1
-            else:
-                convex_hull.append(last_1)  # If the frame_energy curve starts decreasing, the last highest value is assigned to the convex hull
+# total = 0
+# count = 0
+# for lines in range(len(peak_valley_new)):
+#     plt.vlines(peak_valley_new[lines][0], min(d1), d1[peak_valley_new[lines][0]], 'green')
+#     plt.vlines(peak_valley_new[lines][1], min(d1), d1[peak_valley_new[lines][1]], 'black')
+#     plt.vlines(peak_valley_new[lines][2], min(d1), d1[peak_valley_new[lines][2]], 'green')
+    # total += d1[peak_valley_new[lines][1]]
+    # count += 1
+for lines in range(len(peak_valley)):
+    plt.vlines(peak_valley[lines][0], min(d1), d1[peak_valley[lines][0]], 'green')
+    plt.hlines(d1[peak_valley[lines][1]]-0.2, 0, len(d1))
+    plt.vlines(peak_valley[lines][1], min(d1), d1[peak_valley[lines][1]], 'black')
+    plt.vlines(peak_valley[lines][2], min(d1), d1[peak_valley[lines][2]], 'green')
+print type(d1)
 
-        elif k > break_point:  # Monotonically decreasing from breakpoint till end of the segment
-            if frame_energy[k + 1] < frame_energy[k] < last_2:
-                convex_hull.append(frame_energy[k])  # Add element of the frame_energy to the convex hull as long as it is decreasing
-                last_2 = frame_energy[k + 1]  # Update last_2, so that if the curve starts increasing, the last smallest value is stored in last_2
-            else:
-                convex_hull.append(last_2)  # If the frame_energy curve starts increasing, the last lowest value is assigned to the convex hull
-        else:
-            convex_hull.append(frame_energy[break_point])  # The point of inflection
-    convex_hull.append(frame_energy[len(frame_energy) - 1])  # Had to compute one less point due to indexing issues. Appending the last missing point with last least value
 
-    diff_f = [0] * len(convex_hull)  # Creating a list of the same length as the Convex hull and assigning all its elements with a value of zero
-    for k in range(len(convex_hull)):
-        diff_f[k] = convex_hull[k] - frame_energy[k]  # Finding the difference between the convex hull and the frame_energy
-        if diff_f[k] < 0:
-            diff_f[k] *= 0  # For those points where the frame_energy is greater than the convex hull, making that point 0.
-    frame_energy.reverse()  # Reverse the frame_energy and run convex hull on it again.
-    convex_hull[:] = []  # Emptying the list
-    break_point = frame_energy.index(max(frame_energy))
-    last_1 = frame_energy[0]
-    last_2 = frame_energy[break_point]
+# plt.hlines(total/count, 0, len(d1))
 
-    for k in range(len(frame_energy) - 1):
-        if k < break_point:
-            if frame_energy[k] > frame_energy[k - 1] and frame_energy[k] > last_1:
-                convex_hull.append(frame_energy[k])
-                last_1 = frame_energy[k]
-            else:
-                convex_hull.append(last_1)
+# plt.plot(batman, 'blue', label='Audio')
+plt.plot(d1, 'black', label='Envelope', linewidth='2.0')
+# plt.hlines(0.1, 0, len(d1))
+# plt.hlines(0.8, 0, len(d1))
 
-        elif k > break_point:
-            if frame_energy[k + 1] < frame_energy[k] < last_2:
-                convex_hull.append(frame_energy[k])
-                last_2 = frame_energy[k + 1]
-            else:
-                convex_hull.append(last_2)
-
-        else:
-            convex_hull.append(frame_energy[break_point])
-
-    convex_hull.append(frame_energy[len(frame_energy) - 1])
-    diff_b = [0] * len(convex_hull)
-    for k in range(len(convex_hull)):
-        diff_b[k] = convex_hull[k] - frame_energy[k]
-        if diff_b[k] < 0:
-            diff_b[k] *= 0
-
-    frame_energy.reverse()  # Reverse frame_energy once more for correct indexing in proceeding steps
-    diff_b.reverse()  # Reverse diff_b for correct indexing in proceeding steps
-
-    if max(diff_f) >= max(diff_b):  # Comparing Maximum's
-        if max(diff_f) > threshold:  # Comparing the diff with a unified threshold which decides whether the difference is large enough or not to warrant a segment
-            st = original_curve.index(frame_energy[0])  # Starting index of segment 1
-            bp = original_curve.index((frame_energy[diff_f.index(max(diff_f))]))  # Ending index of segment 1, and starting index of segment 2
-            sp = original_curve.index(frame_energy[-1])  # Ending index of segment 2
-            segment_boundary.append(bp)  # Adding the breakpoint to the segment boundary list
-            if len(original_curve[st:bp]) > 0 and len(original_curve[bp:sp]) > 0:  # If both segments are larger than 0 in length, then proceed with further segmentation
-                segmentation(original_curve[st:bp], original_curve)
-                segmentation(original_curve[bp:sp], original_curve)
-            else:
-                return ()
-        else:
-            return ()
-    else:
-        if max(diff_b) > threshold:
-            st = original_curve.index(frame_energy[0])
-            bp = original_curve.index((frame_energy[diff_b.index(max(diff_b))]))
-            sp = original_curve.index(frame_energy[-1])
-            segment_boundary.append(bp)
-            if len(original_curve[st:bp]) > 0 and len(original_curve[bp:sp]) > 0:
-                segmentation(original_curve[st:bp], original_curve)
-                segmentation(original_curve[bp:sp], original_curve)
-            else:
-                return ()
-        else:
-            return ()
-
-segmentation(d1, d1)
-
-segment_boundary.append(len(d1))
-segment_boundary.sort()
-
-plt.plot(batman, 'blue', label='Audio')
-plt.plot(d1, 'red', label='Envelope', linewidth='2.0')
-plt.vlines(segment_boundary[0], min(d1), max(d1), 'black', label='Segment boundary', linewidth='2.0')
-for j in segment_boundary:
-    plt.vlines(j, min(d1), max(d1), 'black')
-plt.ylabel('Magnitude')
-plt.xlabel('Frame Number')
-plt.title('Segments')
 plt.legend(loc='best')
 plt.show()
