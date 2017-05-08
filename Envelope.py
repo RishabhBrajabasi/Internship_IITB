@@ -45,56 +45,21 @@ def valleys(st_energy_valley, threshold_valley):
                 valley_f.append(0)
     return valley_f, location_valley_f
 #----------------------------------------------------------------------------------------------------------------------#
-def peak_valley_elimination(peak_pve, valley_pve, location_peak_pve, location_valley_pve):
-
-    # remove_valley = []
-    # for ele in range(len(location_combined)):
-    #     if location_combined[ele] in location_peak_pve:
-    #         if location_combined[ele] - location_combined[ele-1] < 20:
-    #             remove_valley.append(location_combined[ele-1])
-    #         elif location_combined[ele] - location_combined[ele+1] < 20:
-    #             remove_valley.append(location_combined[ele - 1])
-    #         elif d1[location_combined[ele]] - d1[location_combined[ele-1]] < 0.1:
-    #             remove_valley.append(location_combined[ele - 1])
-    #         elif d1[location_combined[ele]] - d1[location_combined[ele + 1]] < 0.1:
-    #             remove_valley.append(location_combined[ele - 1])
-    #
-    # location_valley_pve_new = []
-    # for ele in range(len(location_valley_pve)):
-    #     if location_valley_pve[ele] not in remove_valley:
-    #         location_valley_pve_new.append(location_valley_pve)
-    # valley_list = []
-    # valley_list_loc = []
-    # true_valley = [d1[location_valley_pve[0]]]
-    # print location_peak_pve
-    # print location_valley_pve
-    # for lpp in range(len(location_peak_pve)-1):
-    #     for val in range(location_peak_pve[lpp], location_peak_pve[lpp+1]):
-    #         if val in location_valley_pve:
-    #             valley_list.append(d1[val])
-    #             valley_list_loc.append(val)
-    #     print location_peak_pve[lpp], valley_list_loc, location_peak_pve[lpp+1]
-    #     min_val = min(valley_list)
-    #     valley_list[:] = []
-    #     valley_list_loc[:] = []
-    #     true_valley.append(d1.index(min_val))
-    # true_valley.append(d1[location_valley_pve[-1]])
-    #
-    # print location_peak_pve
-    # print location_valley_pve
-    # print true_valley
-
+def peak_valley_elimination(location_peak_pve, location_valley_pve):
     location_combined = location_peak_pve + location_valley_pve
     location_combined.sort()
     peak_valley_pair = [[]]
-
+    peak_valley_pair_value = [[]]
+    print location_peak_pve
+    print location_valley_pve
     print location_combined
     for ele in range(len(location_combined)):
         if location_combined[ele] in location_peak_pve:
             peak_valley_pair.append([location_combined[ele - 1], location_combined[ele], location_combined[ele + 1]])
-
+            peak_valley_pair_value.append([d1[location_combined[ele - 1]], d1[location_combined[ele]], d1[location_combined[ele + 1]]])
     peak_valley_pair.pop(0)
-    return peak_valley_pair
+    peak_valley_pair_value.pop(0)
+    return peak_valley_pair, peak_valley_pair_value
 #----------------------------------------------------------------------------------------------------------------------#
 def butter_bandpass(highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -141,8 +106,17 @@ for k in range(len(d1)):
 d1 = d1.tolist()
 peak, location_peak = peaks(d1, 0.2)
 valley, location_valley = valleys(d1, 0.8)
-peak_valley = peak_valley_elimination(peak, valley, location_peak, location_valley)
+peak_valley, peak_valley_value = peak_valley_elimination(location_peak, location_valley)
 print peak_valley
+print peak_valley_value
+
+#
+# d2 = []
+# for i in range(len(d1)):
+#     d2.append(round(d1[i], 2))
+
+# print 'D1:', d1[0:100]
+# print 'D2:', d2[0:100]
 # eliminate = []
 # for val in range(len(location_peak)):
 #     if d1[peak_valley[val][1]] - d1[peak_valley[val][0]] < 0.05 and d1[peak_valley[val][1]] - d1[peak_valley[val][2]] < 0.05:
@@ -165,20 +139,39 @@ print peak_valley
 #     plt.vlines(peak_valley_new[lines][2], min(d1), d1[peak_valley_new[lines][2]], 'green')
     # total += d1[peak_valley_new[lines][1]]
     # count += 1
-for lines in range(len(peak_valley)):
-    plt.vlines(peak_valley[lines][0], min(d1), d1[peak_valley[lines][0]], 'green')
-    plt.hlines(d1[peak_valley[lines][1]]-0.2, 0, len(d1))
-    plt.vlines(peak_valley[lines][1], min(d1), d1[peak_valley[lines][1]], 'black')
-    plt.vlines(peak_valley[lines][2], min(d1), d1[peak_valley[lines][2]], 'green')
-print type(d1)
+# for lines in range(len(peak_valley)):
+#     plt.vlines(peak_valley[lines][0], min(d1), d1[peak_valley[lines][0]], 'green')
+#     plt.hlines(d1[peak_valley[lines][1]]-0.2, 0, len(d1))
+#     plt.vlines(peak_valley[lines][1], min(d1), d1[peak_valley[lines][1]], 'black')
+#     plt.vlines(peak_valley[lines][2], min(d1), d1[peak_valley[lines][2]], 'green')
+# print type(d1)
 
 
-# plt.hlines(total/count, 0, len(d1))
+value = d1[peak_valley[0][1]]*0.8
+flash_1 = min(enumerate(d1[peak_valley[0][0]:peak_valley[0][1]]), key=lambda x: abs(x[1]-value))
+print 'Flash_1:', flash_1
 
-# plt.plot(batman, 'blue', label='Audio')
+flash_2 = min(enumerate(d1[peak_valley[0][1]:peak_valley[0][2]]), key=lambda x: abs(x[1]-value))
+print 'Flash_2:', flash_2
+
+print type(peak_valley[0][0])
+
+print 'Peak Value:', d1[peak_valley[0][1]]
+print 'Value', value
+print peak_valley[0][0], peak_valley[0][1], peak_valley[0][2]
+print d1[peak_valley[0][0]], d1[peak_valley[0][1]], d1[peak_valley[0][2]]
+print d1[peak_valley[0][0]:peak_valley[0][2]]
+# x1 = d1.index(value)
 plt.plot(d1, 'black', label='Envelope', linewidth='2.0')
-# plt.hlines(0.1, 0, len(d1))
-# plt.hlines(0.8, 0, len(d1))
-
-plt.legend(loc='best')
+plt.hlines(d1[peak_valley[0][1]] - 0.2, flash_1[0] + peak_valley[0][0], flash_2[0] + peak_valley[0][1], 'red', linewidth='2.0' )
 plt.show()
+# # plt.hlines(total/count, 0, len(d1))
+
+# # plt.plot(batman, 'blue', label='Audio')
+# plt.plot(d1, 'black', label='Envelope', linewidth='2.0')
+# plt.plot(d2, 'red', label='Envelope', linewidth='2.0')
+# # plt.hlines(0.1, 0, len(d1))
+# # plt.hlines(0.8, 0, len(d1))
+#
+# plt.legend(loc='best')
+# plt.show()
