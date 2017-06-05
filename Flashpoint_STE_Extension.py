@@ -56,8 +56,8 @@ def peak_elimination(audio):
     text_file_1 = open(str(new[:-4]) + 'PE.csv', 'w')
     try:
         audio_file = audio
-        window_dur = 30
-        hop_dur = 5
+        window_dur = 50
+        hop_dur = 7
         fs, audio_data = wavfile.read(audio_file)  # Extract the sampling frequency and the data points of the audio file.
         audio_data = audio_data / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
         audio_data = butter_band_pass_filter(audio_data, 300, 2500, fs, order=6)  # Filtering the data.
@@ -199,14 +199,6 @@ def peak_elimination(audio):
             the_list_4.append([valley_2[l3], flash_1, peak_2[l3], flash_2, valley_2[l3 + 1]])
         the_list_4.pop(0)
 
-        # print len(the_list_1), len(the_list_2), len(the_list_3), len(the_list_4)
-
-        # import matplotlib.pyplot as plt
-        # plt.plot(st_energy)
-        # for i in range(len(the_list_4)):
-        #     plt.vlines(the_list_4[i][2], 0, st_energy[the_list_4[i][2]])
-        # plt.show()
-
         boundary = [[]]
         for b in the_list_4:
             if b[0] < b[1] < b[3] < b[4]:  # valley_left < flash_left < flash_right < valley_right
@@ -256,8 +248,7 @@ def peak_elimination(audio):
                 better_boundaries.append([overlapping_boundaries[bb][1], overlapping_boundaries[bb + 1][0]])
             better_boundaries.append([overlapping_boundaries[-1][0], overlapping_boundaries[-1][1]])
             better_boundaries.append([overlapping_boundaries[-1][1], round(x_values[-1], 2)])
-        # print overlapping_boundaries
-        # print better_boundaries
+
         for i in range(len(better_boundaries)):
             if better_boundaries[0][0] != overlapping_boundaries[0][0] and better_boundaries[0][1] != overlapping_boundaries[0][1]:
                 if i % 2 == 0:
@@ -357,6 +348,7 @@ def evaluation(textgrid1, textgrid2):
         time_2 = []
         counter = 0
         # ----------------------------------------------------------------------------------------------------------------------#
+
         for m in re.finditer('text = "', data_1):
             if data_1[m.start() - 33] == '=':
                 time_1.append(float(
@@ -390,6 +382,8 @@ def evaluation(textgrid1, textgrid2):
             time_1.append(counter)
             counter += 1
             # ----------------------------------------------------------------------------------------------------------------------#
+
+        counter_vowel = 0
         for m in re.finditer('"Vowel"', data_2):
             time_2.append(float(
                 data_2[m.start() - 34] + data_2[m.start() - 33] + data_2[m.start() - 32] + data_2[m.start() - 31] +
@@ -397,8 +391,12 @@ def evaluation(textgrid1, textgrid2):
             time_2.append(float(
                 data_2[m.start() - 17] + data_2[m.start() - 16] + data_2[m.start() - 15] + data_2[m.start() - 14] +
                 data_2[m.start() - 13] + data_2[m.start() - 12]))
+            time_2.append(counter_vowel)
+            counter_vowel += 1
             # ----------------------------------------------------------------------------------------------------------------------#
+
         vowel_data = ['aa', 'AA', 'ae', 'aw', 'ay', 'ee', 'ex', 'ii', 'II', 'oo', 'OO', 'oy', 'uu', 'UU']
+
         fa_vowel_time = [[]]
         for tick in range(0, len(time_1), 4):
             if time_1[tick + 2] in vowel_data:
@@ -406,34 +404,41 @@ def evaluation(textgrid1, textgrid2):
         fa_vowel_time.pop(0)
 
         ev_vowel_time = [[]]
-        for tock in range(0, len(time_2), 2):
-            ev_vowel_time.append([time_2[tock], time_2[tock + 1]])
+        for tock in range(0, len(time_2), 3):
+            ev_vowel_time.append([time_2[tock], time_2[tock + 1], time_2[tock + 2]])
         ev_vowel_time.pop(0)
-        overlap = [[]]
 
+        overlap = [[]]
+        pair = [[]]
         for o in fa_vowel_time:
-            third_life_fa = (o[1] - o[0])
+            third_life_fa = (o[1] - o[0]) * (3/4)
             for t in ev_vowel_time:
-                # if t[0] <= o[0] <= t[1] and t[0] <= t[1] <= o[1] and third_life_fa <= t[1] - o[0]:
-                if t[0] <= o[0] <= t[1] and t[0] <= t[1] <= o[1]:
-                    # print 'Case 1 ', half_life_fa, t[1] - o[0], o[2]
+                if t[0] <= o[0] <= t[1] and t[0] <= t[1] <= o[1] and third_life_fa <= t[1] - o[0]:
+                # if t[0] <= o[0] <= t[1] and t[0] <= t[1] <= o[1]:
+                    pair.append([o[3], t[2]])
                     overlap.append([o[2], o[3]])
-                # elif o[0] <= t[0] <= t[1] and t[0] <= o[1] <= t[1] and third_life_fa <= o[1] - t[0]:
-                elif o[0] <= t[0] <= t[1] and t[0] <= o[1] <= t[1]:
-                    # print 'Case 2', half_life_fa, o[1] - t[0], o[2]
+                elif o[0] <= t[0] <= t[1] and t[0] <= o[1] <= t[1] and third_life_fa <= o[1] - t[0]:
+                # elif o[0] <= t[0] <= t[1] and t[0] <= o[1] <= t[1]:
+                    pair.append([o[3], t[2]])
                     overlap.append([o[2], o[3]])
                 elif o[0] <= t[0] < t[1] <= o[1]:
+                    pair.append([o[3], t[2]])
                     overlap.append([o[2], o[3]])
-                    # print o[2]
                 elif t[0] <= o[0] < o[1] <= t[1]:
+                    pair.append([o[3], t[2]])
                     overlap.append([o[2], o[3]])
-                    # print o[2]
         overlap.pop(0)
-        check = []
-        for lap in overlap:
-            if lap[1] not in check:
-                check.append(lap[1])
-        return len(check)
+        pair.pop(0)
+        check_1 = []
+        check_2 = []
+        ct = 0
+        for c in range(len(pair)):
+            if pair[c][0] not in check_1:
+                check_1.append(pair[c][0])
+                if pair[c][1] not in check_2:
+                    check_2.append(pair[c][1])
+                    ct += 1
+        return ct
     except:
         return -1
 
@@ -494,7 +499,7 @@ def results_write(sr_no, name, vpe, vpee, vfa, t):
 
 # ----------------------------------------------------------------------------------------------------------------------#
 file_name_template_1 = 'F:\Projects\Active Projects\Project Intern_IITB\Envelope\\'
-result_name = 'Vowel_Evaluation_Flashpoint_STE_T1.csv'
+result_name = 'Vowel_Evaluation_Flashpoint_STE_O75_50_7.csv'
 
 copyfile('C:\Users\Mahe\PycharmProjects\Internship_IITB\\Flashpoint_STE_Extension.py',
          'F:\Projects\Active Projects\Project Intern_IITB\Envelope\\' + result_name[:-4] + '.txt')
@@ -515,7 +520,7 @@ results_vowel.write(
 for j in only_audio:
     filename1, count1 = peak_elimination(j)  # Run Peak elimination algorithm
     textgrid(str(filename1[:-4] + 'PE.csv'))  # Create TextGrid based on results of peak elimination
-    # print file_no
+
     count_pe = evaluation(str(j[:-4] + '.TextGrid'), str(
         filename1[:-4] + 'PE_NEW.TextGrid'))  # Evaluate the TextGrid created and the force aligned TextGrid
     vowel_count, time = fa_count(str(j[
@@ -536,130 +541,3 @@ winsound.Beep(300, 2000)
 win32api.MessageBox(0, 'The code has finished running', 'Complete', 0x00001000)
 
 results_vowel.close()
-
-# results_vowel = open(file_name_template_1 + result_name, 'r')  # The csv file where the results are saved
-# file_name_template_2 = file_name_template_1 + result_name[:-4] + '_Analysis.csv'
-# results_analysis = open(file_name_template_2, 'w')  # The csv file where the results are saved
-# data = results_vowel.read()
-# one = data.split('\n')
-# two = []
-# for i in range(len(one)):
-#     two.append(one[i].split(','))
-# two.pop(0)
-# two.pop(-1)
-# results_analysis.write('Start time' + ',' + 'End time' + ',' + 'Count' + ',' + 'Precision' + ',' + 'Recall' + ',' + 'Files' + '\n')
-
-# def results(analyze, time_1, time_2):
-#     count = 0
-#     precision = []
-#     recall = []
-#     names = []
-#     for element in range(len(one) - 2):
-#         if analyze[element][8] == 'Fine':
-#             if time_1 < float(analyze[element][5]) <= time_2:
-#                     count += 1
-#                     precision.append(float(analyze[element][6]))
-#                     recall.append(float(analyze[element][7]))
-#                     names.append(analyze[element][0])
-#     results_analysis.write(str(start_time) + ',' + str(end_time) + ',' + str(count) + ',' + str(sum(precision)/len(precision)) + ','
-#                            + str(sum(recall)/len(recall)) + ',' + str(names) + ',' + '\n')
-#
-# start_time = 0.0
-# end_time = 0.5
-# results(two, start_time, end_time)
-#
-# start_time = 0.5
-# end_time = 1.0
-# results(two, start_time, end_time)
-#
-# start_time = 1.0
-# end_time = 1.5
-# results(two, start_time, end_time)
-#
-# start_time = 1.5
-# end_time = 2.0
-# results(two, start_time, end_time)
-#
-# start_time = 2.0
-# end_time = 2.5
-# results(two, start_time, end_time)
-#
-# start_time = 2.5
-# end_time = 3.0
-# results(two, start_time, end_time)
-#
-# start_time = 3.0
-# end_time = 3.5
-# results(two, start_time, end_time)
-#
-# start_time = 3.5
-# end_time = 4.0
-# results(two, start_time, end_time)
-#
-# start_time = 4.0
-# end_time = 4.5
-# results(two, start_time, end_time)
-#
-# start_time = 4.5
-# end_time = 5.0
-# results(two, start_time, end_time)
-#
-# start_time = 5.0
-# end_time = 5.5
-# results(two, start_time, end_time)
-#
-# start_time = 5.5
-# end_time = 6.0
-# results(two, start_time, end_time)
-#
-# start_time = 6.0
-# end_time = 6.5
-# results(two, start_time, end_time)
-#
-# start_time = 6.5
-# end_time = 7.0
-# results(two, start_time, end_time)
-#
-# start_time = 7.0
-# end_time = 7.5
-# results(two, start_time, end_time)
-#
-# start_time = 7.5
-# end_time = 8.0
-# results(two, start_time, end_time)
-#
-# start_time = 8.0
-# end_time = 8.5
-# results(two, start_time, end_time)
-#
-# start_time = 8.5
-# end_time = 9.0
-# results(two, start_time, end_time)
-#
-# start_time = 9.0
-# end_time = 9.5
-# results(two, start_time, end_time)
-#
-# start_time = 9.5
-# end_time = 10.0
-# results(two, start_time, end_time)
-#
-# start_time = 10.0
-# end_time = 10.5
-# results(two, start_time, end_time)
-#
-# start_time = 10.5
-# end_time = 11.0
-# results(two, start_time, end_time)
-#
-# start_time = 11.0
-# end_time = 11.5
-# results(two, start_time, end_time)
-#
-# start_time = 11.5
-# end_time = 12.0
-# results(two, start_time, end_time)
-#
-# start_time = 12.0
-# end_time = 60.0
-# results(two, start_time, end_time)
