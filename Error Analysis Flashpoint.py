@@ -6,6 +6,9 @@ Input:
 Output:
 1. Image of the filtered audio data along with force aligned and flashpoint boundaries.
 2. Image of the envelope with force aligned boundaries, flashpoint boundaries, peak and corresponding flashpoint information.
+
+Author: Rishabh Brajabasi(rishabhbrajabasi@gmail.com)
+Date: 6th July 2017
 """
 import re
 import matplotlib.pyplot as plt
@@ -55,9 +58,6 @@ for m in re.finditer('text = "', tg_data_1):
     time_1.append(counter)
     counter += 1
 #----------------------------------------------------------------------------------------------------------------------#
-"""
-
-"""
 def moving_average(interval, window_size):
     window = np.ones(int(window_size))/float(window_size)
     return np.convolve(interval, window, 'same')
@@ -86,7 +86,8 @@ def butter_band_pass_filter(data_band, lowcut, highcut, fs, order=5):
     return y
 #----------------------------------------------------------------------------------------------------------------------#
 """
-
+Reading the audio data and sampling rate. Filtering data and computing the absolute of the hilbert transform.
+Filtering the absolute of the hilbert transform and smoothing envelope curve. Normalization.
 """
 fs, audio_data = wavfile.read(audio_file)  # Extract the sampling frequency and the data points of the audio file.
 audio_data = audio_data / float(2 ** 15)  # Normalizing it to [-1,1] range from [-2^15,2^15]
